@@ -29,10 +29,10 @@ def query() -> str:
 @PAGE_APP.route('/<signature>', methods=['GET', 'POST'])
 @PAGE_APP.route('/<signature>/', methods=['GET', 'POST'])
 def shortUrlRedirect(signature) -> Response:
-    domain_ = model.Domain.query.filter_by(domain=request.host).first()
-    if not domain_:
+    domain = model.Domain.query.filter_by(domain=request.host).first()
+    if not domain:
         return redirect(request.host_url)
-    url = model.Url.query.filter_by(domain_id=domain_.id, signature=signature).first()
+    url = model.Url.query.filter_by(domain_id=domain.id, signature=signature).first()
     if not url:
         return redirect(request.host_url)
 

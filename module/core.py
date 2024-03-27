@@ -2,22 +2,16 @@ from typing import Any
 from flask import request, jsonify, make_response, Response
 
 def getRequestParameter(request: request) -> dict:
-    data = {}
+    result = {}
     if request.method == 'GET':
-        data = request.args
+        result = request.args
     elif request.method == 'POST':
-        data = request.form
-        if not data:
-            data = request.get_json()
-    return dict(data)
+        result = request.form
+        if not result:
+            result = request.get_json()
+    return dict(result)
 
 class GenerateResponse:
-    def __init__(self) -> None:
-        self.code = 0
-        self.message = ''
-        self.data = None
-        self.httpCode = 200
-
     def generate(self) -> Response:
         responseJson = jsonify({
             'code': self.code,

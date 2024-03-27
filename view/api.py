@@ -6,8 +6,8 @@ API_APP = Blueprint('API_APP', __name__, url_prefix='/api')
 
 @API_APP.get('/get_domain')
 def getDomain() -> Response:
-    data = [item.domain for item in model.Domain.query.all()]
-    return core.GenerateResponse().success(data)
+    result = [item.domain for item in model.Domain.query.all()]
+    return core.GenerateResponse().success(result)
 
 @API_APP.post('/generate')
 def generate() -> Response:
@@ -15,25 +15,24 @@ def generate() -> Response:
     domain = parameter.get('domain')
     longUrl = parameter.get('longUrl')
     signature = parameter.get('signature')
-    validDay = parameter.get('validDay', '0')
+    validDay = parameter.get('validDay', 0)
     if not domain or not longUrl:
         return core.GenerateResponse().error(110, '参数不能为空')
     elif not auxiliary.isUrl(longUrl):
         return core.GenerateResponse().error(110, 'longUrl需完整')
-    elif validDay:
-        if not validDay.isdigit():
-            return core.GenerateResponse().error(110, 'validDay仅能为数字')
-        validDay = int(validDay)
+    elif type(validDay) != int:
+        return core.GenerateResponse().error(110, 'validDay仅能为数字')
+    elif validDay != 0:
         if validDay < 0 or validDay > 365:
             return core.GenerateResponse().error(110, 'validDay仅能填0~365,0代表永久')
-
-    domain_ = model.Domain.query.filter_by(domain=domain).first()
-    if not domain_:
+    
+    domainD = model.Domain.query.filter_by(domain=domain).first()
+    if not domainD:
         return core.GenerateResponse().error(110, 'domain不存在')
     if config.AUTOMATIC:
         protocol = 'https'
     else:
-        protocol = model.Domain.query.filter_by(id=domain_.id).first().protocol
+        protocol = model.Domain.query.filter_by(id=domainD.id).first().protocol
         if database_type.Domain(protocol) == database_type.Domain.HTTP:
             protocol = 'http'
         else:
@@ -50,24 +49,24 @@ def generate() -> Response:
             return core.GenerateResponse().error(110, 'signature不能为index')
         elif signature.lower() == 'query':
             return core.GenerateResponse().error(110, 'signature不能为query')
-        elif model.Url.query.filter_by(domain_id=domain_.id, signature=signature).first():
+        elif model.Url.query.filter_by(domain_id=domainD.id, signature=signature).first():
             return core.GenerateResponse().error(110, 'signature已存在')
 
-        url = model.Url(type_=database_type.Url.CUSTOM, domain_id=domain_.id, long_url=longUrl, valid_day=validDay, signature=signature)
+        url = model.Url(type_=database_type.Url.CUSTOM, domain_id=domainD.id, long_url=longUrl, valid_day=validDay, signature=signature)
         model.DB.session.add(url)
         model.DB.session.commit()
     else:
-        url = model.Url.query.filter_by(domain_id=domain_.id, long_url=longUrl).first()
+        url = model.Url.query.filter_by(domain_id=domainD.id, long_url=longUrl).first()
         if url:
             return core.GenerateResponse().success(f'{protocol}://{domain}/{url.signature}')
         
-        url = model.Url(type_=database_type.Url.CUSTOM, domain_id=domain_.id, long_url=longUrl, valid_day=validDay)
+        url = model.Url(type_=database_type.Url.CUSTOM, domain_id=domainD.id, long_url=longUrl, valid_day=validDay)
         model.DB.session.add(url)
         model.DB.session.commit()
 
-        id_ = model.Url.query.filter_by(domain_id=domain_.id, long_url=longUrl).first().id
+        id_ = model.Url.query.filter_by(domain_id=domainD.id, long_url=longUrl).first().id
         signature = auxiliary.base62Encode(id_)
-        if model.Url.query.filter_by(domain_id=domain_.id, signature=signature).first():
+        if model.Url.query.filter_by(domain_id=domainD.id, signature=signature).first():
             signature += 'a'
         url = model.Url.query.filter_by(id=id_).first()
         url.signature = signature
@@ -82,17 +81,16 @@ def get() -> Response:
     if not domain or not signature:
         return core.GenerateResponse().error(110, '参数不能为空')
 
-    domain_ = model.Domain.query.filter_by(domain=domain).first()
-    if not domain_:
+    domainD = model.Domain.query.filter_by(domain=domain).first()
+    if not domainD:
         return core.GenerateResponse().error(110, 'shortUrl错误')
-    url = model.Url.query.filter_by(domain_id=domain_.id, signature=signature).first()
+    url = model.Url.query.filter_by(domain_id=domainD.id, signature=signature).first()
     if not url:
         return core.GenerateResponse().error(110, 'shortUrl错误')
-
-    info = {
+    
+    return core.GenerateResponse().success({
         'longUrl': url.long_url,
         'validDay': url.valid_day,
         'count': url.count,
         'creationTimestamp': url.creation_timestamp
-    }
-    return core.GenerateResponse().success(info)
+    })

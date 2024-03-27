@@ -18,12 +18,8 @@ class Domain(DB.Model):
     __tablename__ = f'{config.DATABASE["tablePrefix"]}domain'
 
     id = DB.Column(DB.Integer, primary_key=True)
-    domain = DB.Column(DB.String(255))
     protocol = DB.Column(DB.Integer)
-
-    def __init__(self, domain: str, protocol: database_type.Domain) -> None:
-        self.domain = domain
-        self.protocol = protocol.value
+    domain = DB.Column(DB.String(255))
 
 class Url(DB.Model):
     __tablename__ = f'{config.DATABASE["tablePrefix"]}url'
