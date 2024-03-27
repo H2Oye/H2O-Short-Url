@@ -1,22 +1,22 @@
 {% include './head.html' %}
             <form>
                 <p>域名</p>
-                <select id="domain" class="mdui-select"></select>
+                <select class="mdui-select" id="domain"></select>
 
                 <div class="mdui-textfield mdui-textfield-floating-label">
                     <label class="mdui-textfield-label">长网址</label>
-                    <input id="longUrl" class="mdui-textfield-input" type="text" required/>
+                    <input class="mdui-textfield-input" id="longUrl" required/>
                 </div>
                 
                 <div class="mdui-textfield mdui-textfield-floating-label">
                     <label class="mdui-textfield-label">特征码</label>
-                    <input id="signature" class="mdui-textfield-input" type="text"/>
+                    <input class="mdui-textfield-input" id="signature"/>
                     <div class="mdui-textfield-helper">如需自定义请填写(仅能填1~5位的数字和字母,不能为api,index,query)</div>
                 </div>
                 
                 <div class="mdui-textfield mdui-textfield-floating-label">
                     <label class="mdui-textfield-label">有效期</label>
-                    <input id="validDay" class="mdui-textfield-input" type="number" value="0" required/>
+                    <input class="mdui-textfield-input" type="number" value="0" id="validDay" required/>
                     <div class="mdui-textfield-helper">单位天,仅能填0~365,0代表永久,默认为0</div>
                 </div>
                 
@@ -24,29 +24,26 @@
                 
                 <div class="mdui-row-xs-2">
                     <div class="mdui-col">
-                        <button class="mdui-btn mdui-btn-raised mdui-btn-block" type="reset">重置</button>
+                        <button class="mdui-btn mdui-btn-raised mdui-btn-block" type="reset" id="reset">重置</button>
                     </div>
 
                     <div class="mdui-col">
-                        <button id="submit" onclick="return summit()" class="mdui-btn mdui-btn-raised mdui-btn-block">生成</button>
+                        <button class="mdui-btn mdui-btn-raised mdui-btn-block" onclick="return submitEvent()">生成</button>
                     </div>
                 </div>
             <form>
             
             <script type="text/javascript">
-                $(document).ready(function() {
-                    request('get', './api/get_domain')
-                        .then(function(response) {
-                            let data = response.data.data;
-                            let element = new mdui.Select('#domain');
-                            for (let dataCount = 0; dataCount < data.length; dataCount++) {
-                                $('#domain').append('<option>' + data[dataCount] + '</option>');
-                            }
-                            element.handleUpdate();
-                        });
+                $(document).ready(async () => {
+                    let domains = (await request('get', './api/get_domain')).data.data;
+                    let domainElement = new mdui.Select('#domain');
+                    for (let domainsCount = 0; domainsCount < domains.length; domainsCount++) {
+                        $('#domain').append('<option>' + domains[domainsCount] + '</option>');
+                    }
+                    domainElement.handleUpdate();
                 });
 
-                function summit() {
+                function submitEvent() {
                     let domain = $('#domain option:selected').text();;
                     let longUrl = $('#longUrl').val();
                     let signature = $('#signature').val();
@@ -55,35 +52,32 @@
                         mdui.alert('参数不能为空');
                         return false;
                     }
-                    
+
                     request('post', './api/generate', {
                         'domain': domain,
                         'longUrl': longUrl,
                         'signature': signature,
                         'validDay': Number(validDay)
-                    })
-                        .then((response) => {
-                            let data = response.data;
-                            if (data.code === 200) {
-                                mdui.dialog({
-                                    content: '短链接:' + data.data,
-                                    buttons: [
-                                        {
-                                            text: '复制',
-                                            onClick: (dialog) => {
-                                                copyText(data.data);
-                                                mdui.snackbar({message: '复制成功'});
-                                            }
-                                        },
-                                        {
-                                            text: '确认',
-                                        }
-                                    ]
-                                });
-                            } else {
-                                mdui.alert(data.message);
+                    }).then((response) => {
+                        mdui.dialog({
+                            content: `短链接:${response.data.data}`,
+                            buttons: [
+                                {
+                                    text: '复制',
+                                    onClick: (dialog) => {
+                                        copyText(response.data.data);
+                                        mdui.snackbar({message: '复制成功'});
+                                    }
+                                },
+                                {
+                                    text: '确认',
+                                }
+                            ],
+                            onClose: () => {
+                                $('#reset').click();
                             }
                         });
+                    });
                     return false;
                 }
             </script>

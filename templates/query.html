@@ -1,52 +1,44 @@
 {% include './head.html' %}
             <form>
-
                 <div class="mdui-textfield mdui-textfield-floating-label">
                     <label class="mdui-textfield-label">短网址</label>
-                    <input id="shortUrl" class="mdui-textfield-input" type="text" required/>
+                    <input class="mdui-textfield-input" id="shortUrl" required/>
                 </div>
                 
                 <br/>
                 
                 <div class="mdui-row-xs-2">
                     <div class="mdui-col">
-                        <button class="mdui-btn mdui-btn-raised mdui-btn-block" type="reset">重置</button>
+                        <button class="mdui-btn mdui-btn-raised mdui-btn-block" type="reset" id="reset">重置</button>
                     </div>
 
                     <div class="mdui-col">
-                        <button id="submit" onclick="return summit()" class="mdui-btn mdui-btn-raised mdui-btn-block">查询</button>
+                        <button class="mdui-btn mdui-btn-raised mdui-btn-block" onclick="return submitEvent()">查询</button>
                     </div>
                 </div>
             <form>
 
             <script type="text/javascript">
-                function summit() {
+                function submitEvent() {
                     let shortUrl = $('#shortUrl').val();
                     if (!shortUrl) {
                         mdui.alert('参数不能为空');
                         return false;
                     }
 
-                    let { domain, signature } = analysisUrl(shortUrl);
-                    request('get', './api/get', {
-                        domain: domain,
-                        signature: signature
-                    })
-                        .then((response) => {
-                            let data = response.data;
-                            if (data.code === 200) {
-                                data = data.data;
-                                let validDay = data.validDay;
-                                if (validDay === 0) {
-                                    validDay = '永久';
-                                } else {
-                                    validDay += '天';
-                                }
-                                mdui.alert('长链接:' + data.longUrl + '<br/>有效期:' + validDay + '<br/>次数:' + data.count + '<br/>时间:' + timestampToTime(data.creationTimestamp));
-                            } else {
-                                mdui.alert(data.message);
-                            }
+                    request('get', './api/get', analysisShortUrl(shortUrl)).then((response) => {
+                        let data = response.data.data;
+                        let validDay = data.validDay;
+                        if (validDay === 0) {
+                            validDay = '永久';
+                        } else {
+                            validDay += '天';
+                        }
+                        mdui.alert(`长链接:${data.longUrl}<br/>有效期:${validDay}<br/>次数:${data.count}<br/>时间:${timestampToTime(data.creationTimestamp)}`,
+                            () => {
+                                $('#reset').click();
                         });
+                    });
                     return false;
                 }
             </script>

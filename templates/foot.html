@@ -6,22 +6,20 @@
                 document.getElementById(id).className = 'mdui-ripple mdui-ripple-white mdui-tab-active';
                 Object.keys(navs).forEach((key) => {
                     if (navs[key].id !== id) {
-                        if (navs[key] !== null) {
-                            navs[key].className = 'mdui-ripple mdui-ripple-white';
-                        }
+                        navs[key].className = 'mdui-ripple mdui-ripple-white';
                     }
                 });
             }
 
             function refreshNav() {
                 let id = window.location.pathname.split('/')[1];
-                if (id === 'index' ||!id) {
+                if (!id || id === 'index') {
                     id = 'generate';
                 }
                 activeNav(id);
             }
 
-            $(document).ready(function() {
+            $(document).ready(() => {
                 refreshNav();
             });
 
@@ -29,12 +27,12 @@
                 container: '#container',
                 fragment: '#container',
                 timeout: 6000
-            }).on('pjax:start', function() {
+            }).on('pjax:start', () => {
                 NProgress.start();
-            }).on('pjax:success', function() {
+            }).on('pjax:success', () => {
                 mdui.mutation();
                 refreshNav();
-            }).on('pjax:end', function() {
+            }).on('pjax:end', () => {
                 NProgress.done();
             });
         </script>
