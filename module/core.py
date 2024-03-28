@@ -26,6 +26,7 @@ class GenerateResponse:
     def error(self, code: int, message: str, httpCode=200) -> Response:
         self.code = code
         self.message = message
+        self.data = None
         self.httpCode = httpCode
         return self.generate()
 
@@ -33,4 +34,5 @@ class GenerateResponse:
         self.code = 200
         self.message = 'success'
         self.data = data
+        self.httpCode = 200
         return self.generate()
