@@ -32,8 +32,7 @@ def generate() -> Response:
     if config.AUTOMATIC:
         protocol = 'https'
     else:
-        protocol = model.Domain.query.filter_by(id=domainD.id).first().protocol
-        if database_type.Domain(protocol) == database_type.Domain.HTTP:
+        if database_type.Domain(domainD.protocol) == database_type.Domain.HTTP:
             protocol = 'http'
         else:
             protocol = 'https'
@@ -64,11 +63,9 @@ def generate() -> Response:
         model.DB.session.add(url)
         model.DB.session.commit()
 
-        id_ = model.Url.query.filter_by(domain_id=domainD.id, long_url=longUrl).first().id
-        signature = auxiliary.base62Encode(id_)
+        signature = auxiliary.base62Encode(url.id)
         if model.Url.query.filter_by(domain_id=domainD.id, signature=signature).first():
             signature += 'a'
-        url = model.Url.query.filter_by(id=id_).first()
         url.signature = signature
         model.DB.session.commit()
     return core.GenerateResponse().success(f'{protocol}://{domain}/{signature}')
