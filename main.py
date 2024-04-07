@@ -5,12 +5,12 @@ import flask_cors
 import config
 
 app = Flask(__name__)
-SSL = config.DATABASE.get('ssl')
-if SSL.get('enable'):
-    SSL_ = f'?ssl_ca={SSL["caPath"]}&ssl_key={SSL["keyPath"]}&ssl_cert={SSL["certPath"]}'
+SSL = config.DATABASE['ssl']
+if SSL['enable']:
+    SSLConfig = f'?ssl_ca={SSL["caPath"]}&ssl_key={SSL["keyPath"]}&ssl_cert={SSL["certPath"]}'
 else:
-    SSL_ = ''
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{config.DATABASE["username"]}:{config.DATABASE["password"]}@{config.DATABASE["host"]}:{config.DATABASE["port"]}/{config.DATABASE["name"]}{SSL_}'
+    SSLConfig = ''
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{config.DATABASE["username"]}:{config.DATABASE["password"]}@{config.DATABASE["host"]}:{config.DATABASE["port"]}/{config.DATABASE["name"]}{SSLConfig}'
 flask_cors.CORS(app, supports_credentials=True)
 app.register_blueprint(api.API_APP)
 app.register_blueprint(page.PAGE_APP)
